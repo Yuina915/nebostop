@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "A76465E8-6DE5-44EA-8A52-9B07F0E9ADD6",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:nebostop.xcodeproj",
+      "identifier" : "3C22B6CA2F53FCC600512360",
+      "name" : "nebostop"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:nebostop.xcodeproj",
+        "identifier" : "3C22B6D72F53FCC800512360",
+        "name" : "nebostopTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:nebostop.xcodeproj",
+        "identifier" : "3C22B6E12F53FCC800512360",
+        "name" : "nebostopUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
