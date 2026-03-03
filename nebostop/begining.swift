@@ -11,7 +11,7 @@ enum Screen {
     case start
     case whenyouwakeup
     case setmission
-    
+    case wakeupcomplete
 }
 
 struct begining: View {
@@ -23,6 +23,8 @@ struct begining: View {
         }else if currentscreen == .whenyouwakeup {
             whenyouwakeup(currentscreen: $currentscreen)
         }else if currentscreen == .setmission {
+            setmission(currentscreen: $currentscreen)
+        }else if currentscreen == .wakeupcomplete {
             setmission(currentscreen: $currentscreen)
         }
     }

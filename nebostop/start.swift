@@ -41,7 +41,7 @@ struct start: View {
                         .frame(maxWidth: 300, alignment: .center)
                     
                     Button{
-                        currentscreen = .setmission
+                        currentscreen = .whenyouwakeup
                     } label: {
                         Text("宣言する！")
                             .font(.title2)

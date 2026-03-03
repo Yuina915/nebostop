@@ -10,7 +10,7 @@ import SwiftData
 
 struct whenyouwakeup: View {
     @State var selectionDate = Date()
-    @State private var currentStep = 2
+    @State private var currentStep = 1
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelcontext
@@ -48,7 +48,7 @@ struct whenyouwakeup: View {
                     Spacer()
                     
                     Button{
-                        currentscreen = .whenyouwakeup
+                        currentscreen = .setmission
                     } label: {
                         Label("この時間に起きる", systemImage: "alarm.fill")
                             .font(.title2)

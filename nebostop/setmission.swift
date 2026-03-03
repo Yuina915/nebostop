@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct setmission: View {
-    @State private var currentStep = 1
+    @State private var currentStep = 2
     @Binding var currentscreen: Screen
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) var modelcontext
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -40,7 +43,7 @@ struct setmission: View {
                     
                     
                     Button{
-                        
+                        currentscreen = .wakeupcomplete
                     } label: {
                         Label("この時間に起きる", systemImage: "alarm.fill")
                             .font(.title2)
