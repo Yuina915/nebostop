@@ -6,11 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct whenyouwakeup: View {
     @State var selectionDate = Date()
-    @State private var currentStep = 0
-    let totalSteps = 4
+    @State private var currentStep = 2
+    @Binding var currentscreen: Screen
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) var modelcontext
+    @Query var missiondata : [MissionData]
+    @State private var showAlert = false
+    let totalSteps = 3
     var body: some View {
         NavigationStack{
             ZStack{
@@ -42,7 +48,7 @@ struct whenyouwakeup: View {
                     Spacer()
                     
                     Button{
-                        
+                        currentscreen = .whenyouwakeup
                     } label: {
                         Label("この時間に起きる", systemImage: "alarm.fill")
                             .font(.title2)
@@ -57,8 +63,18 @@ struct whenyouwakeup: View {
             }
         }
     }
+    func save(){
+        let newmission = MissionData(wakeuptime: selectionDate)
+        //modelcontext.insert(selectionDate)
+        //何を書けばいいだろう、、？
+        //多分入力した日時をstructに入れる処理
+        //時間だけじゃなくてデフォルトで今日の日付も入れたほうがいいのでは？
+    }
 }
 
+
+
 #Preview {
-    whenyouwakeup()
+    whenyouwakeup(currentscreen:.constant(.whenyouwakeup))
+        .modelContainer(for: MissionData.self, inMemory: true)
 }

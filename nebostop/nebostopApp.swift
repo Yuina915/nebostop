@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct nebostopApp: App {
@@ -13,6 +14,6 @@ struct nebostopApp: App {
         WindowGroup {
             ContentView()
         }
-        
+        .modelContainer(for: MissionData.self)
     }
 }

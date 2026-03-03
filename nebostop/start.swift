@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct start: View {
+    @State private var currentStep = 0
+    @Binding var currentscreen: Screen
+    let totalSteps = 3
     var body: some View {
         NavigationStack{
             ZStack{
@@ -15,7 +18,21 @@ struct start: View {
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
+                VStack{
+                    HStack(spacing: 10) {
+                        ForEach(0..<totalSteps, id: \.self) { index in
+                            Rectangle()
+                                .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
+                                .frame(height: 6)
+                                .cornerRadius(3)
+                        }
+                    }
+                    .padding(70)
+                    
+                    Spacer()
+                }
                 VStack(spacing:30){
+                    
                     
                     Text("明日は何時に起きるのか\n宣言しよう！")
                         .font(.title2 .bold())
@@ -23,8 +40,8 @@ struct start: View {
                         .lineSpacing(20)
                         .frame(maxWidth: 300, alignment: .center)
                     
-                    NavigationLink{
-                        whenyouwakeup()
+                    Button{
+                        currentscreen = .setmission
                     } label: {
                         Text("宣言する！")
                             .font(.title2)
@@ -42,5 +59,5 @@ struct start: View {
 }
 
 #Preview {
-    start()
+    start(currentscreen: .constant(.start))
 }

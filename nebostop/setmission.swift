@@ -9,11 +9,12 @@ import SwiftUI
 
 struct setmission: View {
     @State private var currentStep = 1
-    let totalSteps = 4
+    @Binding var currentscreen: Screen
+    let totalSteps = 3
     var body: some View {
         NavigationStack{
             ZStack{
-                Image("whenyouwakeup")
+                Image("setmission")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
@@ -36,6 +37,8 @@ struct setmission: View {
                     
                     Spacer()
                     
+                    
+                    
                     Button{
                         
                     } label: {
@@ -55,5 +58,5 @@ struct setmission: View {
 }
 
 #Preview {
-    setmission()
+    setmission(currentscreen: .constant(.setmission))
 }
