@@ -6,13 +6,15 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct wakeupcomplete: View {
-    @State var selectionDate = Date()
+    @Binding var selectionDate: Date
+    @Binding var inputmission: String
     @Binding var currentscreen: Screen
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.modelContext) var modelcontext
+
+    private var displayedWakeupTimeText: String {
+        selectionDate.formatted(date: .omitted, time: .shortened)
+    }
     var body: some View {
         ZStack{
             Image("wakeupcomplete")
@@ -24,7 +26,7 @@ struct wakeupcomplete: View {
                     Text("あしたは")
                         .font(.title2)
                         .frame(maxWidth: 300, alignment: .topLeading)
-                    Text("00:00")
+                    Text(displayedWakeupTimeText)
                         .font(.largeTitle .bold())
                         .frame(maxWidth: 300, alignment: .center)
                     Text("に起きよう！")
@@ -61,18 +63,16 @@ struct wakeupcomplete: View {
                 
                 VStack{
                     HStack{
-                        Text("起床時刻")
+                        Text("ミッション")
                             .font(.title2)
                         Spacer()
-                        DatePicker("Wake up time",
-                                   selection: $selectionDate,
-                                   displayedComponents:.hourAndMinute)
-                        .labelsHidden()
+                        Text(inputmission.isEmpty ? "未設定" : inputmission)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
                         
                     }
                     .padding(.horizontal, 50)
                     .padding(.vertical, 10)
-                    Text("ミッションの内容")
                 }
                 
                 Rectangle()
@@ -99,6 +99,5 @@ struct wakeupcomplete: View {
 }
 
 #Preview {
-    wakeupcomplete(currentscreen:.constant(.wakeupcomplete))
-        .modelContainer(for: MissionData.self, inMemory: true)
+    wakeupcomplete(selectionDate: .constant(Date()), inputmission: .constant(""), currentscreen:.constant(.wakeupcomplete))
 }

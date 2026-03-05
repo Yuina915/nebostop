@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct whenyouwakeup: View {
-    @State var selectionDate = Date()
+    @Binding var selectionDate: Date
     @State private var currentStep = 1
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
@@ -33,6 +33,7 @@ struct whenyouwakeup: View {
                 DatePicker("Wake up time",
                            selection: $selectionDate,
                            displayedComponents:.hourAndMinute)
+                .datePickerStyle(.wheel)
                 .labelsHidden()
                 VStack{
                     HStack(spacing: 10) {
@@ -48,6 +49,7 @@ struct whenyouwakeup: View {
                     Spacer()
                     
                     Button{
+                        save()
                         currentscreen = .setmission
                     } label: {
                         Label("この時間に起きる", systemImage: "alarm.fill")
@@ -65,16 +67,14 @@ struct whenyouwakeup: View {
     }
     func save(){
         let newmission = MissionData(wakeuptime: selectionDate)
-        //modelcontext.insert(selectionDate)
-        //何を書けばいいだろう、、？
-        //多分入力した日時をstructに入れる処理
-        //時間だけじゃなくてデフォルトで今日の日付も入れたほうがいいのでは？
+        modelcontext.insert(newmission)
+        try? modelcontext.save()
     }
 }
 
 
 
 #Preview {
-    whenyouwakeup(currentscreen:.constant(.whenyouwakeup))
+    whenyouwakeup(selectionDate: .constant(Date()), currentscreen:.constant(.whenyouwakeup))
         .modelContainer(for: MissionData.self, inMemory: true)
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct start: View {
     @State private var currentStep = 0
     @Binding var currentscreen: Screen
+    @Binding var selectionDate : Date
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -59,5 +60,5 @@ struct start: View {
 }
 
 #Preview {
-    start(currentscreen: .constant(.start))
+    start(currentscreen: .constant(.start), selectionDate: .constant(Date()))
 }

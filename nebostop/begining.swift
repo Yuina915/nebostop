@@ -17,15 +17,16 @@ enum Screen {
 struct begining: View {
     @State private var currentscreen: Screen = .start
     @State private var selectionDate: Date = Date()
+    @State private var inputmission: String = ""
     var body: some View {
         if currentscreen == .start {
-            start(currentscreen: $currentscreen)
+            start(currentscreen: $currentscreen, selectionDate: $selectionDate)
         }else if currentscreen == .whenyouwakeup {
-            whenyouwakeup(currentscreen: $currentscreen)
+            whenyouwakeup(selectionDate: $selectionDate, currentscreen: $currentscreen)
         }else if currentscreen == .setmission {
-            setmission(currentscreen: $currentscreen)
+            setmission(inputmission: $inputmission, currentscreen: $currentscreen)
         }else if currentscreen == .wakeupcomplete {
-            setmission(currentscreen: $currentscreen)
+            wakeupcomplete(selectionDate: $selectionDate, inputmission: $inputmission, currentscreen: $currentscreen)
         }
     }
 }

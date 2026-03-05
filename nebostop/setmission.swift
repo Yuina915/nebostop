@@ -10,9 +10,12 @@ import SwiftData
 
 struct setmission: View {
     @State private var currentStep = 2
+    @Binding var inputmission: String
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelcontext
+    @Query(sort: [SortDescriptor(\MissionData.wakeuptime, order: .reverse)])
+    var missiondata: [MissionData]
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -40,26 +43,59 @@ struct setmission: View {
                     
                     Spacer()
                     
-                    
-                    
-                    Button{
-                        currentscreen = .wakeupcomplete
-                    } label: {
-                        Label("この時間に起きる", systemImage: "alarm.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 15)
-                            .padding(.horizontal, 30)
-                            .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                            .cornerRadius(30)
+                    ZStack (alignment: .trailing){
+                        TextField("ミッションを入力", text: $inputmission, axis: .vertical)
+                            .lineLimit(1...4)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .frame(minHeight: 60)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 30))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .stroke(Color.gray.opacity(0.35), lineWidth: 1)
+                            )
+                        
+                        Button{
+                            saveMission()
+                            currentscreen = .wakeupcomplete
+                        } label: {
+                            Image(systemName: "paperplane.fill")
+                                .font(.title3.weight(.bold))
+                                .foregroundColor(.white)
+                                .frame(width: 48, height: 48)
+                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                .clipShape(Circle())
+                        }
+                        .padding(6)
                     }
+                    .padding(.horizontal, 20)
                     .padding(.vertical, 200)
                 }
             }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onAppear {
+            if let latestMission = missiondata.first {
+                inputmission = latestMission.mission
+            }
+        }
+    }
+    
+    func saveMission() {
+        let trimmed = inputmission.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let latestMission = missiondata.first {
+            latestMission.mission = trimmed
+        } else {
+            let newMission = MissionData(mission: trimmed)
+            modelcontext.insert(newMission)
+        }
+        
+        try? modelcontext.save()
     }
 }
 
 #Preview {
-    setmission(currentscreen: .constant(.setmission))
+    setmission(inputmission: .constant(""), currentscreen: .constant(.setmission))
 }
