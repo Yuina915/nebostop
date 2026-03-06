@@ -11,6 +11,8 @@ struct wakeupcomplete: View {
     @Binding var selectionDate: Date
     @Binding var inputmission: String
     @Binding var currentscreen: Screen
+    @State private var isEditingMission = false
+    @State private var editingMissionText = ""
 
     private var displayedWakeupTimeText: String {
         selectionDate.formatted(date: .omitted, time: .shortened)
@@ -22,7 +24,7 @@ struct wakeupcomplete: View {
                 .scaledToFill()
                 .ignoresSafeArea()
             VStack{
-                VStack{
+                VStack(alignment: .leading, spacing: 10){
                     Text("あしたは")
                         .font(.title2)
                         .frame(maxWidth: 300, alignment: .topLeading)
@@ -52,6 +54,7 @@ struct wakeupcomplete: View {
                                displayedComponents:.hourAndMinute)
                     .labelsHidden()
                     
+                    
                 }
                 .padding(.horizontal, 50)
                 .padding(.vertical, 10)
@@ -66,13 +69,51 @@ struct wakeupcomplete: View {
                         Text("ミッション")
                             .font(.title2)
                         Spacer()
-                        Text(inputmission.isEmpty ? "未設定" : inputmission)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.trailing)
+                        Button{
+                            if isEditingMission {
+                                inputmission = editingMissionText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                isEditingMission = false
+                            } else {
+                                editingMissionText = inputmission
+                                isEditingMission = true
+                            }
+                        }label: {
+                            Image(systemName: isEditingMission ? "checkmark" : "pencil.line")
+                                .font(.title3.weight(.bold))
+                                .foregroundColor(.white)
+                                .frame(width: 40, height: 40)
+                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                .clipShape(Circle())
+                            
+                        }
                         
                     }
                     .padding(.horizontal, 50)
                     .padding(.vertical, 10)
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        if isEditingMission {
+                            TextField("ミッションを入力", text: $editingMissionText, axis: .vertical)
+                                .lineLimit(1...4)
+                                .multilineTextAlignment(.leading)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, minHeight: 52, alignment: .topLeading)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(Color.gray.opacity(0.35), lineWidth: 1)
+                                )
+                        } else {
+                            Text(inputmission.isEmpty ? "未設定" : inputmission)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 54, alignment: .topLeading)
+                    .padding(.horizontal, 50)
                 }
                 
                 Rectangle()
@@ -83,16 +124,14 @@ struct wakeupcomplete: View {
             }
             .padding(.vertical, 180)
             
-            Button{
-                currentscreen = .start
-            } label: {
-                Label("この時間に起きる", systemImage: "alarm.fill")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .padding(.vertical, 15)
-                    .padding(.horizontal, 30)
-                    .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                    .cornerRadius(30)
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onAppear {
+            editingMissionText = inputmission
+        }
+        .onChange(of: inputmission) { newValue in
+            if !isEditingMission {
+                editingMissionText = newValue
             }
         }
     }
