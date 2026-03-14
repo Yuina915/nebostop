@@ -19,19 +19,6 @@ struct start: View {
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                VStack{
-                    HStack(spacing: 10) {
-                        ForEach(0..<totalSteps, id: \.self) { index in
-                            Rectangle()
-                                .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
-                                .frame(height: 6)
-                                .cornerRadius(3)
-                        }
-                    }
-                    .padding(70)
-                    
-                    Spacer()
-                }
                 VStack(spacing:30){
                     
                     
@@ -54,6 +41,9 @@ struct start: View {
                     }
                 }
                 .offset(y:-130)
+            }
+            .overlay {
+                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
         }
     }

@@ -16,6 +16,7 @@ struct whenyouwakeup: View {
     @Environment(\.modelContext) var modelcontext
     @Query var missiondata : [MissionData]
     @State private var showAlert = false
+    @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -36,16 +37,6 @@ struct whenyouwakeup: View {
                 .datePickerStyle(.wheel)
                 .labelsHidden()
                 VStack{
-                    HStack(spacing: 10) {
-                        ForEach(0..<totalSteps, id: \.self) { index in
-                            Rectangle()
-                                .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
-                                .frame(height: 6)
-                                .cornerRadius(3)
-                        }
-                    }
-                    .padding(70)
-                    
                     Spacer()
                     
                     Button{
@@ -63,12 +54,22 @@ struct whenyouwakeup: View {
                     .padding(.vertical, 200)
                 }
             }
+            .overlay {
+                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
+            }
         }
     }
     func save(){
-        let newmission = MissionData(wakeuptime: selectionDate)
-        modelcontext.insert(newmission)
+        if let latestMission = missiondata.first,
+           latestMission.mission.isEmpty,
+           latestMission.actualwakeuptime == nil {
+            latestMission.wakeuptime = selectionDate
+        } else {
+            let newmission = MissionData(wakeuptime: selectionDate)
+            modelcontext.insert(newmission)
+        }
         try? modelcontext.save()
+        hasDeclaredWakeupTime = true
     }
 }
 

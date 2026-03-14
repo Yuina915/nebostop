@@ -31,16 +31,6 @@ struct setmission: View {
                     .frame(maxWidth: 300, alignment: .center)
                     .offset(x:20, y:-260)
                 VStack{
-                    HStack(spacing: 10) {
-                        ForEach(0..<totalSteps, id: \.self) { index in
-                            Rectangle()
-                                .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
-                                .frame(height: 6)
-                                .cornerRadius(3)
-                        }
-                    }
-                    .padding(70)
-                    
                     Spacer()
                     
                     ZStack (alignment: .trailing){
@@ -72,6 +62,9 @@ struct setmission: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 200)
                 }
+            }
+            .overlay {
+                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

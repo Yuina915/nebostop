@@ -12,9 +12,18 @@ class MissionData {
     var wakeuptime: Date
     var mission: String
     var actualwakeuptime: Date?
+    var reportImageData: Data?
+    var reportCreatedAt: Date?
     
-    init(wakeuptime: Date = Date(), mission: String = "") {
-            self.wakeuptime = wakeuptime
-            self.mission = mission
-        }
+    init(
+        wakeuptime: Date = Date(),
+        mission: String = "",
+        reportImageData: Data? = nil,
+        reportCreatedAt: Date? = nil
+    ) {
+        self.wakeuptime = wakeuptime
+        self.mission = mission
+        self.reportImageData = reportImageData
+        self.reportCreatedAt = reportCreatedAt
+    }
 }
