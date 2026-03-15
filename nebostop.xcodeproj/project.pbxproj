@@ -30,9 +30,30 @@
 		3CE174022F546F6E00685619 /* nebostop.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = nebostop.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3C0A60AC2F66917600262222 /* Exceptions for "nebostop" folder in "nebostopTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = 3C22B6D72F53FCC800512360 /* nebostopTests */;
+		};
+		3C0A60AD2F66917600262222 /* Exceptions for "nebostop" folder in "nebostopUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"GoogleService-Info.plist",
+			);
+			target = 3C22B6E12F53FCC800512360 /* nebostopUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3C22B6CD2F53FCC600512360 /* nebostop */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3C0A60AC2F66917600262222 /* Exceptions for "nebostop" folder in "nebostopTests" target */,
+				3C0A60AD2F66917600262222 /* Exceptions for "nebostop" folder in "nebostopUITests" target */,
+			);
 			path = nebostop;
 			sourceTree = "<group>";
 		};
