@@ -14,7 +14,9 @@ struct setmission: View {
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelcontext
-    @Query(sort: [SortDescriptor(\MissionData.wakeuptime, order: .reverse)])
+    @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
+    @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     var missiondata: [MissionData]
     let totalSteps = 3
     var body: some View {
@@ -60,6 +62,7 @@ struct setmission: View {
                         
                         Button{
                             saveMission()
+                            hasDeclaredWakeupTime = true
                             currentscreen = .wakeupcomplete
                         } label: {
                             Image(systemName: "paperplane.fill")
@@ -78,11 +81,25 @@ struct setmission: View {
             .overlay {
                 ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
+            .overlay(alignment: .bottom) {
+                if !debugSaveMessage.isEmpty {
+                    Text(debugSaveMessage)
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.black.opacity(0.7))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 12)
+                }
+            }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear {
-            if let latestMission = missiondata.first {
+            if let latestMission = missiondata.first(where: { $0.actualwakeuptime == nil }) {
                 inputmission = latestMission.mission
+            } else {
+                inputmission = ""
             }
         }
     }
@@ -90,10 +107,11 @@ struct setmission: View {
     func saveMission() {
         let trimmed = inputmission.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if let latestMission = missiondata.first {
-            latestMission.mission = trimmed
+        if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+            pending.mission = trimmed
+            pending.createdAt = Date()
         } else {
-            let newMission = MissionData(mission: trimmed)
+            let newMission = MissionData(mission: trimmed, createdAt: Date())
             modelcontext.insert(newMission)
         }
         

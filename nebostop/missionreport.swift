@@ -12,7 +12,7 @@ import SwiftData
 struct missionreport: View {
     @Binding var inputmission: String
     @Environment(\.modelContext) private var modelcontext
-    @Query(sort: [SortDescriptor(\MissionData.wakeuptime, order: .reverse)])
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     private var missiondata: [MissionData]
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?

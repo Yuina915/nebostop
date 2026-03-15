@@ -14,9 +14,11 @@ struct whenyouwakeup: View {
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelcontext
-    @Query var missiondata : [MissionData]
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
+    var missiondata : [MissionData]
     @State private var showAlert = false
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
+    @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -71,17 +73,40 @@ struct whenyouwakeup: View {
                 ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
         }
+        .overlay(alignment: .bottom) {
+            if !debugSaveMessage.isEmpty {
+                Text(debugSaveMessage)
+                    .font(.caption.bold())
+                    .foregroundColor(.white)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Color.black.opacity(0.7))
+                    .clipShape(Capsule())
+                    .padding(.bottom, 12)
+            }
+        }
+        .onAppear {
+            if let latestMission = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+                selectionDate = latestMission.wakeuptime
+            } else {
+                selectionDate = Date()
+            }
+        }
     }
     func save(){
-        if let latestMission = missiondata.first,
-           latestMission.mission.isEmpty,
-           latestMission.actualwakeuptime == nil {
-            latestMission.wakeuptime = selectionDate
+        if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+            pending.wakeuptime = selectionDate
+            pending.createdAt = Date()
         } else {
-            let newmission = MissionData(wakeuptime: selectionDate)
+            let newmission = MissionData(wakeuptime: selectionDate, createdAt: Date())
             modelcontext.insert(newmission)
         }
-        try? modelcontext.save()
+        do {
+            try modelcontext.save()
+            debugSaveMessage = "保存OK"
+        } catch {
+            debugSaveMessage = "保存失敗: \(error.localizedDescription)"
+        }
         hasDeclaredWakeupTime = true
     }
 }

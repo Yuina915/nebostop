@@ -13,7 +13,7 @@ struct wakeupcomplete: View {
     @Binding var inputmission: String
     @Binding var currentscreen: Screen
     @Environment(\.modelContext) private var modelcontext
-    @Query(sort: [SortDescriptor(\MissionData.wakeuptime, order: .reverse)])
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     private var missiondata: [MissionData]
     @State private var isEditingMission = false
     @State private var editingMissionText = ""
@@ -170,22 +170,24 @@ struct wakeupcomplete: View {
     }
 
     private func saveWakeupTime() {
-        if let latestMission = missiondata.first {
-            latestMission.wakeuptime = selectionDate
+        if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+            pending.wakeuptime = selectionDate
+            pending.createdAt = Date()
             try? modelcontext.save()
         } else {
-            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission)
+            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission, createdAt: Date())
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }
     }
 
     private func saveMission() {
-        if let latestMission = missiondata.first {
-            latestMission.mission = inputmission
+        if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+            pending.mission = inputmission
+            pending.createdAt = Date()
             try? modelcontext.save()
         } else {
-            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission)
+            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission, createdAt: Date())
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }

@@ -17,8 +17,13 @@ struct wakeup: View {
     }
 
     @Environment(\.modelContext) private var modelcontext
-    @Query(sort: [SortDescriptor(\MissionData.wakeuptime, order: .reverse)])
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     private var missiondata: [MissionData]
+    @Query(
+        filter: #Predicate<MissionData> { $0.actualwakeuptime == nil },
+        sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)]
+    )
+    private var pendingMissions: [MissionData]
     @Binding var tabSelection: Int
     @Binding var beginingScreen: Screen
     @Binding var selectionDate: Date
@@ -27,12 +32,23 @@ struct wakeup: View {
     @State private var actualWakeupTime: Date?
     @State private var path = NavigationPath()
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
+    @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     @State private var dragOffset: CGFloat = 0
     @State private var isTransitioning = false
     @State private var orangeHeight: CGFloat = 0
 
+    private var pendingMission: MissionData? {
+        if let pending = pendingMissions.first {
+            return pending
+        }
+        if hasDeclaredWakeupTime {
+            return missiondata.first
+        }
+        return nil
+    }
+
     private var canPerformWakeup: Bool {
-        hasDeclaredWakeupTime || missiondata.first != nil
+        pendingMission != nil || hasDeclaredWakeupTime
     }
 
     var body: some View {
@@ -97,6 +113,33 @@ struct wakeup: View {
                         .allowsHitTesting(false)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if !debugSaveMessage.isEmpty {
+                    Text(debugSaveMessage)
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.black.opacity(0.7))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 12)
+                }
+            }
+            .overlay {
+                if !canPerformWakeup && path.isEmpty {
+                    ZStack {
+                        Color.black.opacity(0.35)
+                            .ignoresSafeArea()
+                        Text("宣言タブから起床時間を設定してね")
+                            .font(.title3.bold())
+                            .foregroundColor(.white)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 20)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
             .navigationDestination(for: WakeupRoute.self) { value in
                 switch value {
                 case .result(let outcome):
@@ -115,7 +158,9 @@ struct wakeup: View {
                         inputmission: $inputmission,
                         onSelectMission: { mission in
                             inputmission = mission
-                            path.append(WakeupRoute.missionconfirm)
+                            DispatchQueue.main.async {
+                                path.append(WakeupRoute.missionconfirm)
+                            }
                         }
                     )
             case .missionconfirm:
@@ -137,7 +182,7 @@ struct wakeup: View {
         }
         }
         .onAppear {
-            if let latestMission = missiondata.first {
+            if let latestMission = pendingMission {
                 selectionDate = latestMission.wakeuptime
                 inputmission = latestMission.mission
             }
@@ -179,25 +224,14 @@ struct wakeup: View {
     private func performWakeup() {
         let now = Date()
         actualWakeupTime = now
-        if let latestMission = missiondata.first {
+        if let latestMission = pendingMission {
             selectionDate = latestMission.wakeuptime
             inputmission = latestMission.mission
-            let outcome: ResultOutcome
-            if latestMission.actualwakeuptime == nil {
-                latestMission.actualwakeuptime = now
-                try? modelcontext.save()
-                actualWakeupTime = now
-                let isSuccessFromLatest = isSuccessWakeup(actual: now, declared: latestMission.wakeuptime)
-                outcome = isSuccessFromLatest ? .success : .failure
-            } else {
-                actualWakeupTime = latestMission.actualwakeuptime
-                if let actual = latestMission.actualwakeuptime {
-                    let isSuccessFromLatest = isSuccessWakeup(actual: actual, declared: latestMission.wakeuptime)
-                    outcome = isSuccessFromLatest ? .success : .failure
-                } else {
-                    outcome = .failure
-                }
-            }
+            latestMission.actualwakeuptime = now
+            try? modelcontext.save()
+            actualWakeupTime = now
+            let isSuccessFromLatest = isSuccessWakeup(actual: now, declared: latestMission.wakeuptime)
+            let outcome: ResultOutcome = isSuccessFromLatest ? .success : .failure
             Haptics.notify(outcome == .success ? .success : .warning)
             var transaction = Transaction()
             transaction.disablesAnimations = true
@@ -229,11 +263,18 @@ struct wakeup: View {
     }
 
     private func refreshDeclarationState() {
-        if let latestMission = missiondata.first {
-            hasDeclaredWakeupTime = latestMission.actualwakeuptime == nil
-        } else {
-            hasDeclaredWakeupTime = false
+        if pendingMissions.first != nil {
+            hasDeclaredWakeupTime = true
+            return
         }
+        if hasDeclaredWakeupTime {
+            return
+        }
+        if let latest = missiondata.first, latest.actualwakeuptime == nil {
+            hasDeclaredWakeupTime = true
+            return
+        }
+        hasDeclaredWakeupTime = false
     }
 }
 

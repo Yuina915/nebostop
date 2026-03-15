@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct group: View {
     struct GroupRow: Identifiable {
@@ -117,12 +118,12 @@ struct group: View {
             Text("現在参加しているグループ")
                 .font(.headline)
                 .foregroundColor(.black.opacity(0.8))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(alignment: .bottomLeading) {
+                .frame(maxWidth: .infinity, alignment: .center)
+                .overlay(alignment: .center) {
                     Rectangle()
-                        .fill(Color(red: 128/255, green: 88/255, blue: 188/255))
-                        .frame(width: 190, height: 2)
-                        .offset(y: 6)
+                        .fill(Color(red: 149/255, green: 149/255, blue: 149/255))
+                        .frame(width: 200, height: 2)
+                        .offset(y: 15)
                 }
 
             ScrollView(showsIndicators: false) {
@@ -219,6 +220,10 @@ private struct GroupCreateModal: View {
     @State private var newIcon = ""
     @State private var isEditingCustomIcon = false
     @FocusState private var isEmojiFieldFocused: Bool
+    @State private var groupId = GroupCreateModal.makeGroupId()
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    @State private var toastIsError = false
     var onCreate: (String) -> Void
 
     var body: some View {
@@ -234,6 +239,16 @@ private struct GroupCreateModal: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, -8)
+                .overlay {
+                    if showToast {
+                        ToastOverlay(
+                            text: toastMessage,
+                            bottomPadding: 12,
+                            backgroundColor: toastIsError ? Color(red: 235/255, green: 87/255, blue: 87/255) : Color(red: 198/255, green: 236/255, blue: 100/255)
+                        )
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -254,16 +269,28 @@ private struct GroupCreateModal: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         let name = groupName.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !name.isEmpty else { return }
+                        guard !name.isEmpty else {
+                            toastMessage = "グループ名を入力してください"
+                            toastIsError = true
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showToast = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showToast = false
+                                }
+                            }
+                            return
+                        }
                         onCreate(name)
                         dismiss()
                     } label: {
                         Image(systemName: "arrow.up")
                             .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color(red: 76/255, green: 132/255, blue: 255/255))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 253/255, green: 149/255, blue: 96/255))
+                    .clipShape(Circle())
                 }
             }
         }
@@ -378,12 +405,22 @@ private struct GroupCreateModal: View {
         VStack(spacing: 8) {
             Text("招待コード")
                 .font(.headline)
-            HStack(spacing: 10) {
-                Text("ランダムな英数字")
-                    .font(.subheadline)
-                    .foregroundColor(.black.opacity(0.6))
-                Spacer()
+            HStack(spacing: 30) {
+                Text(groupId)
+                    .font(.title)
+                    .foregroundColor(.black)
                 Button {
+                    UIPasteboard.general.string = groupId
+                    toastMessage = "招待コードをコピーしました"
+                    toastIsError = false
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showToast = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showToast = false
+                        }
+                    }
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.headline)
@@ -395,6 +432,18 @@ private struct GroupCreateModal: View {
             }
         }
         .padding(.vertical, 6)
+    }
+
+    private static func makeGroupId(length: Int = 5) -> String {
+        let chars = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        var result = ""
+        result.reserveCapacity(length)
+        for _ in 0..<length {
+            if let c = chars.randomElement() {
+                result.append(c)
+            }
+        }
+        return result
     }
 }
 
