@@ -17,16 +17,28 @@ struct selectmission: View {
     
     var body: some View {
         ZStack{
-            Image("whenyouwakeup")
+            Image("whenyouwakeup2")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-            Text("今日のミッションはこちら！")
-                .font(.title2)
-                .multilineTextAlignment(.center)
-                .lineSpacing(20)
-                .frame(maxWidth: 300, alignment: .center)
-                .offset(x:20, y:-260)
+            VStack{
+                ZStack{
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(maxWidth: 300, maxHeight: 65)
+                        .cornerRadius(30)
+                        .overlay(
+                        RoundedRectangle(cornerRadius: 30).stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
+                        )
+                    Text("今日のミッションはこちら！")
+                        .font(.title2)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(20)
+                        .frame(maxWidth: 300, alignment: .center)
+                }
+                .padding(.top,140)
+                Spacer()
+            }
             GeometryReader { geo in
                 VStack{
                     Spacer()

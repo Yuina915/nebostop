@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 enum Screen {
     case start
@@ -19,6 +20,7 @@ struct begining: View {
     @Binding var selectionDate: Date
     @Binding var inputmission: String
     @Binding var wakeupResetToken: UUID
+    @State private var previousScreen: Screen? = nil
     var body: some View {
         Group {
             if currentscreen == .start {
@@ -31,10 +33,18 @@ struct begining: View {
                 wakeupcomplete(selectionDate: $selectionDate, inputmission: $inputmission, currentscreen: $currentscreen)
             }
         }
+        .onAppear {
+            previousScreen = currentscreen
+        }
         .onChange(of: currentscreen) { newValue in
+            if previousScreen == .setmission && newValue == .wakeupcomplete {
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            }
             if newValue == .wakeupcomplete {
                 wakeupResetToken = UUID()
             }
+            previousScreen = newValue
         }
     }
 }

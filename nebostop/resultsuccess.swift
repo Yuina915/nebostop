@@ -95,7 +95,7 @@ struct resultsuccess: View {
                         .frame(maxWidth: 250, alignment: .topLeading)
                     Text(resultMessage)
                         .font(.largeTitle .bold())
-                        .frame(maxWidth: 250, alignment: .trailing)
+                        .frame(maxWidth: 250, alignment: .center)
                 }
                 .padding(.top, 110)
                 HStack{
