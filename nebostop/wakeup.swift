@@ -141,7 +141,7 @@ struct wakeup: View {
                 }
             }
             .overlay {
-                if !canPerformWakeup && router.path.isEmpty {
+                if !canPerformWakeup {
                     ZStack {
                         Color.black.opacity(0.35)
                             .ignoresSafeArea()
