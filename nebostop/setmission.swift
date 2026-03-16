@@ -19,9 +19,14 @@ struct setmission: View {
     @EnvironmentObject private var wakeupState: WakeupState
     @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
+    @AppStorage("profileImageData") private var profileImageData: Data?
+    @AppStorage("currentUserIconName") private var currentUserIconName = "person.circle"
     @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     var missiondata: [MissionData]
     let totalSteps = 3
+    private var canSaveMission: Bool {
+        !inputmission.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
     var body: some View {
         NavigationStack{
             ZStack{
@@ -73,10 +78,11 @@ struct setmission: View {
                                 .font(.title3.weight(.bold))
                                 .foregroundColor(.white)
                                 .frame(width: 48, height: 48)
-                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                .background(canSaveMission ? Color(red: 253/255, green: 149/255, blue: 96/255) : Color.gray.opacity(0.6))
                                 .clipShape(Circle())
                         }
                         .padding(6)
+                        .disabled(!canSaveMission)
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 200)
@@ -112,16 +118,20 @@ struct setmission: View {
         let trimmed = inputmission.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
-            pending.wakeuptime = selectionDate
-            pending.mission = trimmed
-            pending.createdAt = Date()
-        } else {
-            let newMission = MissionData(
-                wakeuptime: selectionDate,
-                mission: trimmed,
-                createdAt: Date()
-            )
+            if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+                pending.wakeuptime = selectionDate
+                pending.mission = trimmed
+                pending.createdAt = Date()
+                pending.enteredByIconName = currentUserIconName
+                pending.enteredByProfileImageData = profileImageData
+            } else {
+                let newMission = MissionData(
+                    wakeuptime: selectionDate,
+                    mission: trimmed,
+                    createdAt: Date(),
+                    enteredByIconName: currentUserIconName,
+                    enteredByProfileImageData: profileImageData
+                )
             modelcontext.insert(newMission)
         }
 

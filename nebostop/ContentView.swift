@@ -54,12 +54,12 @@ struct ContentView: View {
                         Text("おきたよ")
                     }
                     .tag(1)
-                group()
-                    .tabItem {
-                        Image(systemName: "person.3.fill")
-                        Text("グループ")
-                    }
-                    .tag(2)
+//                group()
+//                    .tabItem {
+//                        Image(systemName: "person.3.fill")
+//                        Text("グループ")
+//                    }
+//                    .tag(2)
                 mypage()
                     .tabItem {
                         Image(systemName: "gearshape.fill")

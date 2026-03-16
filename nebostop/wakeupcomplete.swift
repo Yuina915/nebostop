@@ -19,6 +19,8 @@ struct wakeupcomplete: View {
     @State private var isEditingMission = false
     @State private var editingMissionText = ""
     @State private var hasAppeared = false
+    @AppStorage("profileImageData") private var profileImageData: Data?
+    @AppStorage("currentUserIconName") private var currentUserIconName = "person.circle"
 
     private var displayedWakeupTimeText: String {
         selectionDate.formatted(date: .omitted, time: .shortened)
@@ -157,9 +159,17 @@ struct wakeupcomplete: View {
         if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
             pending.wakeuptime = selectionDate
             pending.createdAt = Date()
+            pending.enteredByIconName = currentUserIconName
+            pending.enteredByProfileImageData = profileImageData
             try? modelcontext.save()
         } else {
-            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission, createdAt: Date())
+            let newMission = MissionData(
+                wakeuptime: selectionDate,
+                mission: inputmission,
+                createdAt: Date(),
+                enteredByIconName: currentUserIconName,
+                enteredByProfileImageData: profileImageData
+            )
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }
@@ -170,9 +180,17 @@ struct wakeupcomplete: View {
         if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
             pending.mission = inputmission
             pending.createdAt = Date()
+            pending.enteredByIconName = currentUserIconName
+            pending.enteredByProfileImageData = profileImageData
             try? modelcontext.save()
         } else {
-            let newMission = MissionData(wakeuptime: selectionDate, mission: inputmission, createdAt: Date())
+            let newMission = MissionData(
+                wakeuptime: selectionDate,
+                mission: inputmission,
+                createdAt: Date(),
+                enteredByIconName: currentUserIconName,
+                enteredByProfileImageData: profileImageData
+            )
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }

@@ -19,6 +19,8 @@ struct whenyouwakeup: View {
     @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     var missiondata : [MissionData]
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
+    @AppStorage("profileImageData") private var profileImageData: Data?
+    @AppStorage("currentUserIconName") private var currentUserIconName = "person.circle"
     let totalSteps = 3
     var body: some View {
         NavigationStack{
@@ -85,8 +87,15 @@ struct whenyouwakeup: View {
         if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
             pending.wakeuptime = selectionDate
             pending.createdAt = Date()
+            pending.enteredByIconName = currentUserIconName
+            pending.enteredByProfileImageData = profileImageData
         } else {
-            let newmission = MissionData(wakeuptime: selectionDate, createdAt: Date())
+            let newmission = MissionData(
+                wakeuptime: selectionDate,
+                createdAt: Date(),
+                enteredByIconName: currentUserIconName,
+                enteredByProfileImageData: profileImageData
+            )
             modelcontext.insert(newmission)
         }
         do {
