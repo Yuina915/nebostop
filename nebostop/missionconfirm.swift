@@ -16,39 +16,37 @@ struct missionconfirm: View {
     
     var body: some View {
         GeometryReader { geo in
-            NavigationStack{
-                ZStack{
-                    Image("missionconfirm")
-                        .resizable()
-                        .scaledToFill()
-                        .ignoresSafeArea()
-                    VStack{
-                        Spacer()
+            ZStack{
+                Image("missionconfirm")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                VStack{
+                    Spacer()
+                    
+                    VStack(spacing:30){
+                        Text(inputmission)
+                            .font(.largeTitle)
+                            .multilineTextAlignment(.center)
                         
-                        VStack(spacing:30){
-                            Text(inputmission)
-                                .font(.largeTitle)
-                                .multilineTextAlignment(.center)
-                            
-                            Button{
-                                Haptics.impact(.medium)
-                                onConfirm()
-                            } label: {
-                                Label("ミッションを確定", systemImage: "flag.pattern.checkered")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 15)
-                                    .padding(.horizontal, 30)
-                                    .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                                    .cornerRadius(30)
-                            }
-                            .padding(.bottom, 200)
+                        Button{
+                            Haptics.impact(.medium)
+                            onConfirm()
+                        } label: {
+                            Label("ミッションを確定", systemImage: "flag.pattern.checkered")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding(.vertical, 15)
+                                .padding(.horizontal, 30)
+                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                .cornerRadius(30)
                         }
+                        .padding(.bottom, 200)
                     }
                 }
-                .overlay {
-                    ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
-                }
+            }
+            .overlay {
+                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
         }
     }

@@ -19,6 +19,10 @@ struct missionreport: View {
     @State private var currentStep = 2
     let totalSteps = 3
     var onReport: () -> Void
+
+    private var canReport: Bool {
+        selectedImageData != nil
+    }
     
     var body: some View {
         ZStack{
@@ -156,9 +160,14 @@ struct missionreport: View {
                                 .foregroundColor(.white)
                                 .padding(.vertical, 15)
                                 .padding(.horizontal, 100)
-                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                .background(
+                                    canReport
+                                    ? Color(red: 253/255, green: 149/255, blue: 96/255)
+                                    : Color.gray.opacity(0.5)
+                                )
                                 .cornerRadius(30)
                         }
+                        .disabled(!canReport)
                         .padding(20)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)

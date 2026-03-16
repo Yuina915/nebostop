@@ -14,14 +14,14 @@ class MissionData {
     var actualwakeuptime: Date?
     var reportImageData: Data?
     var reportCreatedAt: Date?
-    var createdAt: Date
+    var createdAt: Date?
     
     init(
         wakeuptime: Date = Date(),
         mission: String = "",
         reportImageData: Data? = nil,
         reportCreatedAt: Date? = nil,
-        createdAt: Date = Date()
+        createdAt: Date? = Date()
     ) {
         self.wakeuptime = wakeuptime
         self.mission = mission

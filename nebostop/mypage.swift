@@ -87,6 +87,12 @@ struct mypage: View {
                 WakeupHistoryModal(records: recentRecords)
             }
         }
+        .onAppear {
+            print("mypage missiondata count:", missiondata.count)
+            if let latest = missiondata.first {
+                print("mypage latest mission:", latest.mission, "declared:", latest.wakeuptime, "actual:", latest.actualwakeuptime as Any)
+            }
+        }
     }
 
     private var header: some View {

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Combine
 
 struct wakeup: View {
     enum WakeupRoute: Hashable {
@@ -14,6 +15,10 @@ struct wakeup: View {
         case selectmission
         case missionconfirm
         case missionreport
+    }
+
+    final class WakeupRouter: ObservableObject {
+        @Published var path: [WakeupRoute] = []
     }
 
     @Environment(\.modelContext) private var modelcontext
@@ -30,7 +35,7 @@ struct wakeup: View {
     @Binding var inputmission: String
     @Binding var resetToken: UUID
     @State private var actualWakeupTime: Date?
-    @State private var path = NavigationPath()
+    @StateObject private var router = WakeupRouter()
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
     @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     @State private var dragOffset: CGFloat = 0
@@ -38,11 +43,21 @@ struct wakeup: View {
     @State private var orangeHeight: CGFloat = 0
 
     private var pendingMission: MissionData? {
-        if let pending = pendingMissions.first {
+        let sortedPending = pendingMissions.sorted { lhs, rhs in
+            let l = lhs.createdAt ?? lhs.wakeuptime
+            let r = rhs.createdAt ?? rhs.wakeuptime
+            return l > r
+        }
+        if let pending = sortedPending.first {
             return pending
         }
         if hasDeclaredWakeupTime {
-            return missiondata.first
+            let sortedAll = missiondata.sorted { lhs, rhs in
+                let l = lhs.createdAt ?? lhs.wakeuptime
+                let r = rhs.createdAt ?? rhs.wakeuptime
+                return l > r
+            }
+            return sortedAll.first
         }
         return nil
     }
@@ -52,7 +67,7 @@ struct wakeup: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path){
+        NavigationStack(path: $router.path){
             ZStack{
                 Image("wakeup")
                     .resizable()
@@ -126,7 +141,7 @@ struct wakeup: View {
                 }
             }
             .overlay {
-                if !canPerformWakeup && path.isEmpty {
+                if !canPerformWakeup && router.path.isEmpty {
                     ZStack {
                         Color.black.opacity(0.35)
                             .ignoresSafeArea()
@@ -149,7 +164,7 @@ struct wakeup: View {
                         inputmission: $inputmission,
                         actualWakeupTime: actualWakeupTime,
                         onChallenge: {
-                            path.append(WakeupRoute.selectmission)
+                            router.path.append(WakeupRoute.selectmission)
                         }
                     )
                 case .selectmission:
@@ -157,9 +172,10 @@ struct wakeup: View {
                         selectionDate: $selectionDate,
                         inputmission: $inputmission,
                         onSelectMission: { mission in
+                            print("selectmission chosen:", mission)
                             inputmission = mission
                             DispatchQueue.main.async {
-                                path.append(WakeupRoute.missionconfirm)
+                                router.path.append(WakeupRoute.missionconfirm)
                             }
                         }
                     )
@@ -168,25 +184,29 @@ struct wakeup: View {
                     selectionDate: $selectionDate,
                     inputmission: $inputmission,
                     onConfirm: {
-                        path.append(WakeupRoute.missionreport)
+                        router.path.append(WakeupRoute.missionreport)
                     }
                 )
             case .missionreport:
                 missionreport(
                     inputmission: $inputmission,
                     onReport: {
-                        path.append(WakeupRoute.result(.success))
+                        router.path.append(WakeupRoute.result(.success))
                     }
                 )
             }
         }
         }
         .onAppear {
+            print("wakeup onAppear. pendingMission:", pendingMission != nil, "hasDeclaredWakeupTime:", hasDeclaredWakeupTime)
             if let latestMission = pendingMission {
                 selectionDate = latestMission.wakeuptime
                 inputmission = latestMission.mission
             }
             refreshDeclarationState()
+        }
+        .onChange(of: router.path) { newPath in
+            print("wakeup path changed:", newPath)
         }
         .onChange(of: missiondata.count) { _ in
             refreshDeclarationState()
@@ -195,7 +215,9 @@ struct wakeup: View {
             refreshDeclarationState()
         }
         .onChange(of: resetToken) { _ in
-            path = NavigationPath()
+            print("wakeup resetToken changed. path:", router.path)
+            guard router.path.isEmpty else { return }
+            router.path.removeAll()
             dragOffset = 0
             isTransitioning = false
             orangeHeight = 0
@@ -236,17 +258,31 @@ struct wakeup: View {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                path.append(WakeupRoute.result(outcome))
+                router.path.append(WakeupRoute.result(outcome))
             }
             hasDeclaredWakeupTime = false
         } else {
             let isSuccess = isSuccessWakeup(actual: now, declared: selectionDate)
             let outcome: ResultOutcome = isSuccess ? .success : .failure
             Haptics.notify(isSuccess ? .success : .warning)
+            if let latest = missiondata.first {
+                latest.wakeuptime = selectionDate
+                latest.mission = inputmission
+                latest.actualwakeuptime = now
+            } else {
+                let newMission = MissionData(
+                    wakeuptime: selectionDate,
+                    mission: inputmission,
+                    createdAt: Date()
+                )
+                newMission.actualwakeuptime = now
+                modelcontext.insert(newMission)
+            }
+            try? modelcontext.save()
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                path.append(WakeupRoute.result(outcome))
+                router.path.append(WakeupRoute.result(outcome))
             }
             hasDeclaredWakeupTime = false
         }

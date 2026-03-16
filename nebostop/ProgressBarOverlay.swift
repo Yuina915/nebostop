@@ -33,6 +33,7 @@ struct ProgressBarOverlay: View {
             .frame(width: geo.size.width * widthRatio)
             .position(x: geo.size.width / 2, y: geo.size.height * yRatio)
         }
+        .allowsHitTesting(false)
     }
 }
 
