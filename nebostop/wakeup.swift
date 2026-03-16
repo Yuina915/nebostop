@@ -29,6 +29,11 @@ struct wakeup: View {
         sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)]
     )
     private var pendingMissions: [MissionData]
+    @Query(
+        filter: #Predicate<MissionData> { $0.actualwakeuptime != nil },
+        sort: [SortDescriptor(\MissionData.actualwakeuptime, order: .reverse)]
+    )
+    private var completedMissions: [MissionData]
     @Binding var tabSelection: Int
     @Binding var beginingScreen: Screen
     @Binding var selectionDate: Date
@@ -36,11 +41,13 @@ struct wakeup: View {
     @Binding var resetToken: UUID
     @State private var actualWakeupTime: Date?
     @StateObject private var router = WakeupRouter()
+    @State private var hasDisplayedFailureResult = false
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
     @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     @State private var dragOffset: CGFloat = 0
     @State private var isTransitioning = false
     @State private var orangeHeight: CGFloat = 0
+    @EnvironmentObject private var wakeupState: WakeupState
 
     private var pendingMission: MissionData? {
         let sortedPending = pendingMissions.sorted { lhs, rhs in
@@ -62,8 +69,12 @@ struct wakeup: View {
         return nil
     }
 
+    private var latestCompletedMission: MissionData? {
+        completedMissions.first
+    }
+
     private var canPerformWakeup: Bool {
-        pendingMission != nil || hasDeclaredWakeupTime
+        pendingMission != nil || hasDeclaredWakeupTime || wakeupState.lastRecordedResult != nil || latestCompletedMission != nil
     }
 
     var body: some View {
@@ -167,6 +178,8 @@ struct wakeup: View {
                             router.path.append(WakeupRoute.selectmission)
                         }
                     )
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
                 case .selectmission:
                     selectmission(
                         selectionDate: $selectionDate,
@@ -207,12 +220,18 @@ struct wakeup: View {
         }
         .onChange(of: router.path) { newPath in
             print("wakeup path changed:", newPath)
+            wakeupState.isResultActive = newPath.last?.isResultRoute ?? false
         }
         .onChange(of: missiondata.count) { _ in
             refreshDeclarationState()
         }
         .onChange(of: missiondata.first?.actualwakeuptime) { _ in
             refreshDeclarationState()
+        }
+        .onChange(of: wakeupState.lastRecordedResult?.outcome) { newOutcome in
+            if newOutcome != .failure {
+                hasDisplayedFailureResult = false
+            }
         }
         .onChange(of: resetToken) { _ in
             print("wakeup resetToken changed. path:", router.path)
@@ -244,48 +263,65 @@ struct wakeup: View {
     }
 
     private func performWakeup() {
+        if pendingMission == nil {
+            if let last = wakeupState.lastRecordedResult {
+                selectionDate = last.declared
+                actualWakeupTime = last.actual
+                let outcome: ResultOutcome
+                if last.outcome == .failure && hasDisplayedFailureResult {
+                    outcome = .success
+                } else {
+                    outcome = last.outcome
+                    if outcome == .failure {
+                        hasDisplayedFailureResult = true
+                    }
+                }
+                Haptics.notify(outcome == .success ? .success : .warning)
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    router.path.append(WakeupRoute.result(outcome))
+                }
+                beginingScreen = .start
+                return
+            }
+            if let completed = latestCompletedMission,
+               let actual = completed.actualwakeuptime {
+                selectionDate = completed.wakeuptime
+                actualWakeupTime = actual
+                let outcome: ResultOutcome = isSuccessWakeup(actual: actual, declared: completed.wakeuptime) ? .success : .failure
+                Haptics.notify(outcome == .success ? .success : .warning)
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    router.path.append(WakeupRoute.result(outcome))
+                }
+                beginingScreen = .start
+                return
+            }
+        }
         let now = Date()
         actualWakeupTime = now
-        if let latestMission = pendingMission {
-            selectionDate = latestMission.wakeuptime
-            inputmission = latestMission.mission
-            latestMission.actualwakeuptime = now
-            try? modelcontext.save()
-            actualWakeupTime = now
-            let isSuccessFromLatest = isSuccessWakeup(actual: now, declared: latestMission.wakeuptime)
-            let outcome: ResultOutcome = isSuccessFromLatest ? .success : .failure
-            Haptics.notify(outcome == .success ? .success : .warning)
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                router.path.append(WakeupRoute.result(outcome))
-            }
-            hasDeclaredWakeupTime = false
-        } else {
-            let isSuccess = isSuccessWakeup(actual: now, declared: selectionDate)
-            let outcome: ResultOutcome = isSuccess ? .success : .failure
-            Haptics.notify(isSuccess ? .success : .warning)
-            if let latest = missiondata.first {
-                latest.wakeuptime = selectionDate
-                latest.mission = inputmission
-                latest.actualwakeuptime = now
-            } else {
-                let newMission = MissionData(
-                    wakeuptime: selectionDate,
-                    mission: inputmission,
-                    createdAt: Date()
-                )
-                newMission.actualwakeuptime = now
-                modelcontext.insert(newMission)
-            }
-            try? modelcontext.save()
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                router.path.append(WakeupRoute.result(outcome))
-            }
-            hasDeclaredWakeupTime = false
+        guard let latestMission = pendingMission else {
+            print("performWakeup called without pending mission despite guard")
+            return
         }
+        selectionDate = latestMission.wakeuptime
+        inputmission = latestMission.mission
+        latestMission.actualwakeuptime = now
+        try? modelcontext.save()
+        actualWakeupTime = now
+        let isSuccessFromLatest = isSuccessWakeup(actual: now, declared: latestMission.wakeuptime)
+        let outcome: ResultOutcome = isSuccessFromLatest ? .success : .failure
+        wakeupState.record(declared: latestMission.wakeuptime, actual: now, outcome: outcome)
+        Haptics.notify(outcome == .success ? .success : .warning)
+        hasDisplayedFailureResult = (outcome == .failure)
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            router.path.append(WakeupRoute.result(outcome))
+        }
+        hasDeclaredWakeupTime = false
         beginingScreen = .start
     }
 
@@ -328,9 +364,19 @@ struct WakeupPreviewWrapper: View {
             resetToken: .constant(UUID())
         )
         .modelContainer(for: MissionData.self, inMemory: true)
+        .environmentObject(WakeupState())
     }
 }
 
 #Preview("Wakeup Disabled") {
     WakeupPreviewWrapper()
+}
+
+private extension wakeup.WakeupRoute {
+    var isResultRoute: Bool {
+        if case .result = self {
+            return true
+        }
+        return false
+    }
 }

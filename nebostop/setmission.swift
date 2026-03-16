@@ -11,9 +11,12 @@ import SwiftData
 struct setmission: View {
     @State private var currentStep = 2
     @Binding var inputmission: String
+    @Binding var selectionDate: Date
     @Binding var currentscreen: Screen
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelcontext
+    @EnvironmentObject private var toastManager: ToastManager
+    @EnvironmentObject private var wakeupState: WakeupState
     @AppStorage("debugSaveMessage") private var debugSaveMessage: String = ""
     @AppStorage("hasDeclaredWakeupTime") private var hasDeclaredWakeupTime = false
     @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
@@ -62,8 +65,9 @@ struct setmission: View {
                         
                         Button{
                             saveMission()
-                            hasDeclaredWakeupTime = true
-                            currentscreen = .wakeupcomplete
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                                currentscreen = .wakeupcomplete
+                            }
                         } label: {
                             Image(systemName: "paperplane.fill")
                                 .font(.title3.weight(.bold))
@@ -78,12 +82,12 @@ struct setmission: View {
                     .padding(.vertical, 200)
                 }
             }
-            .overlay {
-                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
-            }
-            .overlay(alignment: .bottom) {
-                if !debugSaveMessage.isEmpty {
-                    Text(debugSaveMessage)
+                .overlay {
+                    ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
+                }
+                .overlay(alignment: .bottom) {
+                    if !debugSaveMessage.isEmpty {
+                        Text(debugSaveMessage)
                         .font(.caption.bold())
                         .foregroundColor(.white)
                         .padding(.vertical, 8)
@@ -106,19 +110,30 @@ struct setmission: View {
     
     func saveMission() {
         let trimmed = inputmission.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+        guard !trimmed.isEmpty else { return }
+
         if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
+            pending.wakeuptime = selectionDate
             pending.mission = trimmed
             pending.createdAt = Date()
         } else {
-            let newMission = MissionData(mission: trimmed, createdAt: Date())
+            let newMission = MissionData(
+                wakeuptime: selectionDate,
+                mission: trimmed,
+                createdAt: Date()
+            )
             modelcontext.insert(newMission)
         }
-        
+
         try? modelcontext.save()
+        wakeupState.reset()
+        toastManager.show("ミッションが保存されました")
+        hasDeclaredWakeupTime = true
     }
 }
 
 #Preview {
-    setmission(inputmission: .constant(""), currentscreen: .constant(.setmission))
+    setmission(inputmission: .constant(""), selectionDate: .constant(Date()), currentscreen: .constant(.setmission))
+        .environmentObject(ToastManager())
+        .environmentObject(WakeupState())
 }

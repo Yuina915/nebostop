@@ -13,11 +13,12 @@ struct wakeupcomplete: View {
     @Binding var inputmission: String
     @Binding var currentscreen: Screen
     @Environment(\.modelContext) private var modelcontext
+    @EnvironmentObject private var toastManager: ToastManager
     @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
     private var missiondata: [MissionData]
     @State private var isEditingMission = false
     @State private var editingMissionText = ""
-    @State private var showToast = false
+    @State private var hasAppeared = false
 
     private var displayedWakeupTimeText: String {
         selectionDate.formatted(date: .omitted, time: .shortened)
@@ -134,29 +135,11 @@ struct wakeupcomplete: View {
             .padding(.vertical, 120)
             
         }
-        .overlay(alignment: .bottom) {
-            if showToast {
-                Text("起床時間とミッションが設定されました")
-                    .font(.body.bold())
-                    .foregroundColor(.white)
-                    .padding(.vertical, 14)
-                    .padding(.horizontal, 22)
-                    .background(Color(red: 198/255, green: 236/255, blue: 100/255))
-                    .clipShape(Capsule())
-                    .padding(.bottom, 80)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear {
             editingMissionText = inputmission
-            withAnimation(.easeInOut(duration: 0.25)) {
-                showToast = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    showToast = false
-                }
+            DispatchQueue.main.async {
+                hasAppeared = true
             }
         }
         .onChange(of: inputmission) { newValue in
@@ -165,6 +148,7 @@ struct wakeupcomplete: View {
             }
         }
         .onChange(of: selectionDate) { _ in
+            guard hasAppeared else { return }
             saveWakeupTime()
         }
     }
@@ -179,6 +163,7 @@ struct wakeupcomplete: View {
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }
+        toastManager.show("更新されました")
     }
 
     private func saveMission() {
@@ -191,9 +176,11 @@ struct wakeupcomplete: View {
             modelcontext.insert(newMission)
             try? modelcontext.save()
         }
+        toastManager.show("更新されました")
     }
 }
 
 #Preview {
     wakeupcomplete(selectionDate: .constant(Date()), inputmission: .constant(""), currentscreen:.constant(.wakeupcomplete))
+        .environmentObject(ToastManager())
 }

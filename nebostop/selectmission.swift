@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct selectmission: View {
     @Binding var selectionDate: Date
     @Binding var inputmission: String
     var onSelectMission: (String) -> Void
+    @Query(sort: [SortDescriptor(\MissionData.createdAt, order: .reverse)])
+    private var missiondata: [MissionData]
     @State private var currentStep = 0
     let totalSteps = 3
-    let missionCount = 4
     
     var body: some View {
         ZStack{
@@ -43,32 +45,40 @@ struct selectmission: View {
                 VStack{
                     Spacer()
                     VStack(spacing: 15){
-                        ForEach(0..<missionCount, id: \.self) { index in
-                            let mission = "今日のミッション\(index + 1)"
-                            HStack{
-                                Image(systemName: "person.circle")
-                                    .font(.system(size: 35, weight: .regular))
-                                ZStack{
-                                    Rectangle()
-                                        .fill(Color(.white))
-                                        .frame(width: geo.size.width * 0.40, height: geo.size.height * 0.05)
-                                        .cornerRadius(10)
-                                    Text(mission)
+                        if todaysMissions.isEmpty {
+                            Text("今日設定されたミッションはありません")
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.black.opacity(0.7))
+                        } else {
+                            ForEach(todaysMissions.indices, id: \.self) { index in
+                                let mission = todaysMissions[index]
+                                let missionText = mission.mission.trimmingCharacters(in: .whitespacesAndNewlines)
+                                HStack{
+                                    Image(systemName: "person.circle")
+                                        .font(.system(size: 35, weight: .regular))
+                                    ZStack{
+                                        Rectangle()
+                                            .fill(Color(.white))
+                                            .frame(width: geo.size.width * 0.40, height: geo.size.height * 0.05)
+                                            .cornerRadius(10)
+                                        Text(missionText)
+                                            .lineLimit(1)
+                                            .font(.subheadline)
+                                    }
+                                    Button{
+                                        Haptics.impact(.light)
+                                        inputmission = missionText
+                                        onSelectMission(missionText)
+                                    }label: {
+                                        Text("これにする")
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 10)
+                                            .padding(.horizontal, 10)
+                                            .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                            .cornerRadius(30)
+                                    }
                                 }
-                                Button{
-                                    Haptics.impact(.light)
-                                    inputmission = mission
-                                    onSelectMission(mission)
-                                }label: {
-                                    Text("これにする")
-                                        .font(.caption)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 10)
-                                        .padding(.horizontal, 10)
-                                        .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                                        .cornerRadius(30)
-                                }
-                                
                             }
                         }
                     }
@@ -85,8 +95,19 @@ struct selectmission: View {
             ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
         }
     }
-}
 
+    private var todaysMissions: [MissionData] {
+        let calendar = Calendar.current
+        return missiondata.filter { mission in
+            guard let createdAt = mission.createdAt else {
+                return false
+            }
+            let isToday = calendar.isDateInToday(createdAt)
+            let hasText = !mission.mission.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return isToday && hasText
+        }
+    }
+}
 #Preview {
     selectmission(
         selectionDate: .constant(Date()),

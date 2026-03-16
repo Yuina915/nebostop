@@ -28,7 +28,7 @@ struct begining: View {
             }else if currentscreen == .whenyouwakeup {
                 whenyouwakeup(selectionDate: $selectionDate, currentscreen: $currentscreen)
             }else if currentscreen == .setmission {
-                setmission(inputmission: $inputmission, currentscreen: $currentscreen)
+                setmission(inputmission: $inputmission, selectionDate: $selectionDate, currentscreen: $currentscreen)
             }else if currentscreen == .wakeupcomplete {
                 wakeupcomplete(selectionDate: $selectionDate, inputmission: $inputmission, currentscreen: $currentscreen)
             }
@@ -56,4 +56,6 @@ struct begining: View {
         inputmission: .constant(""),
         wakeupResetToken: .constant(UUID())
     )
+    .environmentObject(ToastManager())
+    .environmentObject(WakeupState())
 }

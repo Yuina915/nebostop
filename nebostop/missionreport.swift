@@ -187,18 +187,16 @@ struct missionreport: View {
     }
     
     private func saveReport() {
-        if let latestMission = missiondata.first, latestMission.mission == inputmission {
-            latestMission.reportImageData = selectedImageData
-            latestMission.reportCreatedAt = Date()
-        } else {
-            let newMission = MissionData(
-                wakeuptime: Date(),
-                mission: inputmission,
-                reportImageData: selectedImageData,
-                reportCreatedAt: Date()
-            )
-            modelcontext.insert(newMission)
+        guard let imageData = selectedImageData else { return }
+        let targetMission = missiondata.first { mission in
+            mission.actualwakeuptime != nil && mission.reportCreatedAt == nil
         }
+        guard let missionToUpdate = targetMission else {
+            print("missionreport saveReport: no mission available to attach report")
+            return
+        }
+        missionToUpdate.reportImageData = imageData
+        missionToUpdate.reportCreatedAt = Date()
         try? modelcontext.save()
     }
 }
