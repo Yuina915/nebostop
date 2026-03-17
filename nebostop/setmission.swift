@@ -90,9 +90,9 @@ struct setmission: View {
                             .disabled(!canSaveMission)
                         }
                         .padding(.horizontal, 20)
-                        .padding(.vertical, 200)
+                        .padding(.vertical, keyboardHeight > 0 ? 10 : 200)
                         .padding(.bottom, keyboardHeight)
-                        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+//                        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
                     }
                 }
                 .overlay {

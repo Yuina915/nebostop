@@ -42,47 +42,59 @@ struct selectmission: View {
                     Spacer()
                 }
                 GeometryReader { geo in
+                    let missionSpacing: CGFloat = 15
+                    let maxVisibleRows: CGFloat = 5
+                    let rowHeight = geo.size.height * 0.05
+                    let visibleRows = max(1, min(CGFloat(todaysMissions.count), maxVisibleRows))
+                    let listHeight = visibleRows * rowHeight + max(visibleRows - 1, 0) * missionSpacing
+
                     VStack{
                         Spacer()
-                        VStack(spacing: 15){
-                            if todaysMissions.isEmpty {
-                                Text("今日設定されたミッションはありません")
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.black.opacity(0.7))
-                            } else {
-                                ForEach(todaysMissions.indices, id: \.self) { index in
-                                    let mission = todaysMissions[index]
-                                    let missionText = mission.mission.trimmingCharacters(in: .whitespacesAndNewlines)
-                                    HStack{
-                                        Image(systemName: "person.circle")
-                                            .font(.system(size: 35, weight: .regular))
-                                        ZStack{
-                                            Rectangle()
-                                                .fill(Color(.white))
-                                                .frame(width: geo.size.width * 0.40, height: geo.size.height * 0.05)
-                                                .cornerRadius(10)
-                                            Text(missionText)
-                                                .lineLimit(1)
-                                                .font(.subheadline)
-                                        }
-                                        Button{
-                                            Haptics.impact(.light)
-                                            inputmission = missionText
-                                            onSelectMission(missionText)
-                                        }label: {
-                                            Text("これにする")
-                                                .font(.caption)
-                                                .foregroundColor(.white)
-                                                .padding(.vertical, 10)
-                                                .padding(.horizontal, 10)
-                                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                                                .cornerRadius(30)
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: missionSpacing) {
+                                if todaysMissions.isEmpty {
+                                    Text("今日設定されたミッションはありません")
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.black.opacity(0.7))
+                                        .frame(height: rowHeight)
+                                } else {
+                                    ForEach(todaysMissions.indices, id: \.self) { index in
+                                        let mission = todaysMissions[index]
+                                        let missionText = mission.mission.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        HStack{
+                                            Image(systemName: "person.circle")
+                                                .font(.system(size: 35, weight: .regular))
+                                            ZStack{
+                                                Rectangle()
+                                                    .fill(Color(.white))
+                                                    .frame(width: geo.size.width * 0.40, height: rowHeight)
+                                                    .cornerRadius(10)
+                                                Text(missionText)
+                                                    .lineLimit(1)
+                                                    .font(.subheadline)
+                                            }
+                                            Button{
+                                                Haptics.impact(.light)
+                                                inputmission = missionText
+                                                onSelectMission(missionText)
+                                            }label: {
+                                                Text("これにする")
+                                                    .font(.caption)
+                                                    .foregroundColor(.white)
+                                                    .padding(.vertical, 10)
+                                                    .padding(.horizontal, 10)
+                                                    .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                                    .cornerRadius(30)
+                                            }
                                         }
                                     }
                                 }
                             }
+                            .padding(.vertical, 8)
                         }
-                        .padding(20)
+                        .frame(height: listHeight)
+                        .frame(maxWidth: geo.size.width * 0.80)
+                        .padding(10)
                         .background(Color(red: 217/255, green: 217/255, blue: 217/255))
                         .cornerRadius(15)
                         Spacer()

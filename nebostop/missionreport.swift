@@ -21,6 +21,7 @@ struct missionreport: View {
     let totalSteps = 3
     var onReport: () -> Void
     @State private var isShowingCamera = false
+    @State private var isShowingPhotoLibrary = false
 
     private var canReport: Bool {
         selectedImageData != nil
@@ -87,7 +88,9 @@ struct missionreport: View {
                                 .padding(.horizontal, 20)
                         }
                         Menu {
-                            PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Button {
+                                isShowingPhotoLibrary = true
+                            } label: {
                                 Label("ライブラリから選ぶ", systemImage: "photo.on.rectangle")
                             }
                             Button {
@@ -160,6 +163,7 @@ struct missionreport: View {
                             }
                             .contentShape(Rectangle())
                         }
+                        .photosPicker(isPresented: $isShowingPhotoLibrary, selection: $selectedItem, matching: .images)
                         Button{
                             saveReport()
                             Haptics.notify(.success)
@@ -187,8 +191,9 @@ struct missionreport: View {
                 ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps,)
             }
         }
-        .sheet(isPresented: $isShowingCamera) {
+        .fullScreenCover(isPresented: $isShowingCamera) {
             CameraCapture(imageData: $selectedImageData)
+                .ignoresSafeArea()
         }
         .onChange(of: selectedItem) { _, newItem in
             Task {
