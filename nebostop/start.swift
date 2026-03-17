@@ -13,37 +13,49 @@ struct start: View {
     @Binding var selectionDate : Date
     let totalSteps = 3
     var body: some View {
-        NavigationStack{
-            ZStack{
-                Image("start")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                VStack(spacing:30){
+        GeometryReader { geometry in
+            NavigationStack{
+                ZStack{
+                    Image("start")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
                     
-                    
-                    Text("明日は何時に起きるのか\n宣言しよう！")
-                        .font(.title2 .bold())
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(20)
-                        .frame(maxWidth: 300, alignment: .center)
-                    
-                    Button{
-                        currentscreen = .whenyouwakeup
-                    } label: {
-                        Text("宣言する！")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 15)
-                            .padding(.horizontal, 30)
-                            .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                            .cornerRadius(30)
+                    VStack(spacing:30){
+                        VStack(spacing: 30){
+                            Text("明日は何時に起きるのか\n宣言しよう！")
+                                .font(.title2 .bold())
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(8)
+                                .frame(maxWidth: geometry.size.width * 0.7, alignment: .center)
+                            Button{
+                                currentscreen = .whenyouwakeup
+                            } label: {
+                                Text("宣言する！")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 15)
+                                    .padding(.horizontal, 30)
+                                    .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                                    .cornerRadius(30)
+                            }
+                        }
+                        .padding(.vertical, 40)
+                        .padding(.horizontal, 32)
+                        .frame(maxWidth: geometry.size.width * 0.8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 30)
+                                .fill(Color.white)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 30)
+                                        .stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
+                                )
+                        )
                     }
+                    .offset(y: -geometry.size.height * 0.2)                }
+                .overlay {
+                    ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
                 }
-                .offset(y:-130)
-            }
-            .overlay {
-                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
             }
         }
     }

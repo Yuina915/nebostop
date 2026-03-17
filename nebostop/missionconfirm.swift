@@ -41,7 +41,7 @@ struct missionconfirm: View {
                                 .background(Color(red: 253/255, green: 149/255, blue: 96/255))
                                 .cornerRadius(30)
                         }
-                        .padding(.bottom, 200)
+                        .padding(.bottom, geo.size.height * 0.25)
                     }
                 }
             }

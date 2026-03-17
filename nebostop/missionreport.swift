@@ -25,6 +25,7 @@ struct missionreport: View {
     }
     
     var body: some View {
+        GeometryReader { geo in
         ZStack{
             Image("setmission2")
                 .resizable()
@@ -34,7 +35,7 @@ struct missionreport: View {
                 ZStack{
                     Rectangle()
                         .fill(Color.white)
-                        .frame(maxWidth: 300, maxHeight: 75)
+                        .frame(maxWidth: geo.size.width * 0.8, maxHeight: geo.size.height * 0.1)
                         .cornerRadius(30)
                         .overlay(
                         RoundedRectangle(cornerRadius: 30).stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
@@ -43,15 +44,13 @@ struct missionreport: View {
                         .font(.title2)
                         .multilineTextAlignment(.center)
                         .lineSpacing(5)
-                        .frame(maxWidth: 300, alignment: .center)
+                        .frame(maxWidth: geo.size.width * 0.7, alignment: .center)
                 }
-                .padding(.top, 110)
+                .padding(.top, geo.size.height * 0.17)
                 
-                
-                GeometryReader { geo in
                     let pickerWidth = geo.size.width * 0.8
-                    let pickerHeight = geo.size.height * 0.35
-                    let noteHeight = geo.size.height * 0.1
+                    let pickerHeight = geo.size.height * 0.3
+                    let noteHeight = geo.size.height * 0.08
                 
                     VStack(spacing: -3){
                         ZStack{
