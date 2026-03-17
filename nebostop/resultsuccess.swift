@@ -17,6 +17,8 @@ struct resultsuccess: View {
     private var missiondata: [MissionData]
     @State private var isEditingMission = false
     @State private var editingMissionText = ""
+    @State private var isShowingImageViewer = false
+    @State private var viewerImage: UIImage?
     
     private var displayedWakeupTimeText: String {
         selectionDate.formatted(date: .omitted, time: .shortened)
@@ -179,6 +181,26 @@ struct resultsuccess: View {
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .fullScreenCover(isPresented: $isShowingImageViewer) {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                if let image = viewerImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .ignoresSafeArea()
+                }
+                Button {
+                    isShowingImageViewer = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.white.opacity(0.9))
+                        .padding(20)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
+        }
     }
     
     private func minutesSinceMidnight(_ date: Date) -> Int {
@@ -252,6 +274,20 @@ struct resultsuccess: View {
                                 )
                             )
                         )
+                        .overlay(alignment: .bottomTrailing) {
+                            Button {
+                                viewerImage = uiImage
+                                isShowingImageViewer = true
+                            } label: {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.black.opacity(0.6))
+                                    .clipShape(Circle())
+                            }
+                            .padding(10)
+                        }
                 }
             }
         }

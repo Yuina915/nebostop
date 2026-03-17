@@ -26,6 +26,8 @@ struct mypage: View {
     @State private var userName = "ユーザーネーム"
     @State private var userImage: UIImage?
     @AppStorage("profileImageData") private var profileImageData: Data?
+    @State private var isShowingImageViewer = false
+    @State private var viewerImage: UIImage?
     
     var body: some View {
         NavigationStack {
@@ -86,6 +88,26 @@ struct mypage: View {
             }
             .sheet(isPresented: $showRecordsModal) {
                 WakeupHistoryModal(records: recentRecords)
+            }
+        }
+        .fullScreenCover(isPresented: $isShowingImageViewer) {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                if let image = viewerImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .ignoresSafeArea()
+                }
+                Button {
+                    isShowingImageViewer = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.white.opacity(0.9))
+                        .padding(20)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
         }
         .onAppear {
@@ -341,6 +363,20 @@ struct mypage: View {
                         )
                         .stroke(Color(red: 253/255, green: 149/255, blue: 96/255), lineWidth: 3)
                         )
+                    .overlay(alignment: .bottomTrailing) {
+                        Button {
+                            viewerImage = uiImage
+                            isShowingImageViewer = true
+                        } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 36, height: 36)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding(10)
+                    }
                 }
                 .padding(12)
                 .background(Color.white)
