@@ -322,6 +322,7 @@ struct wakeup: View {
             router.path.append(WakeupRoute.result(outcome))
         }
         hasDeclaredWakeupTime = false
+        WakeupFollowupManager.shared.cancelFollowup()
         beginingScreen = .start
     }
 

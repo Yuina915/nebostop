@@ -23,6 +23,7 @@ struct whenyouwakeup: View {
     @AppStorage("currentUserIconName") private var currentUserIconName = "person.circle"
     let totalSteps = 3
     var body: some View {
+        GeometryReader { geometry in
         NavigationStack{
             ZStack{
                 Image("whenyouwakeup2")
@@ -30,21 +31,22 @@ struct whenyouwakeup: View {
                     .scaledToFill()
                     .ignoresSafeArea()
                 VStack{
-                    ZStack{
-                        Rectangle()
-                            .fill(Color.white)
-                            .frame(maxWidth: 300, maxHeight: 65)
-                            .cornerRadius(30)
-                            .overlay(
-                            RoundedRectangle(cornerRadius: 30).stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
-                            )
                         Text("明日は何時に起きる？")
                             .font(.title2)
                             .multilineTextAlignment(.center)
-                            .lineSpacing(20)
-                            .frame(maxWidth: 300, alignment: .center)
-                    }
-                    .padding(.top,140)
+                            .lineSpacing(8)
+                            .frame(maxWidth: geometry.size.width * 0.7)
+                            .padding(.vertical, 24)
+                            .padding(.horizontal, 24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .fill(Color.white)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 30)
+                                            .stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
+                                    )
+                            )
+                            .padding(.top, geometry.size.height * 0.17)
                     Spacer()
                 }
 
@@ -83,6 +85,7 @@ struct whenyouwakeup: View {
             }
         }
     }
+}
     func save(){
         if let pending = missiondata.first(where: { $0.actualwakeuptime == nil }) {
             pending.wakeuptime = selectionDate

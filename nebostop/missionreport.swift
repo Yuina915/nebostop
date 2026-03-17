@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 import SwiftData
+import UIKit
 
 struct missionreport: View {
     @Binding var inputmission: String
@@ -19,6 +20,7 @@ struct missionreport: View {
     @State private var currentStep = 2
     let totalSteps = 3
     var onReport: () -> Void
+    @State private var isShowingCamera = false
 
     private var canReport: Bool {
         selectedImageData != nil
@@ -32,20 +34,20 @@ struct missionreport: View {
                 .scaledToFill()
                 .ignoresSafeArea()
             VStack(spacing: 16){
-                ZStack{
-                    Rectangle()
-                        .fill(Color.white)
-                        .frame(maxWidth: geo.size.width * 0.8, maxHeight: geo.size.height * 0.1)
-                        .cornerRadius(30)
-                        .overlay(
-                        RoundedRectangle(cornerRadius: 30).stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
-                        )
-                    Text("ミッションを達成したこと\nを報告しよう！")
-                        .font(.title2)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(5)
-                        .frame(maxWidth: geo.size.width * 0.7, alignment: .center)
-                }
+                Text("ミッションを達成したこと\nを報告しよう！")
+                    .font(.title2)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(5)
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: geo.size.width * 0.7, alignment: .center)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .stroke(Color(red: 149/255, green: 149/255, blue: 149/255), lineWidth: 3)
+                            )
+                    )
                 .padding(.top, geo.size.height * 0.17)
                 
                     let pickerWidth = geo.size.width * 0.8
@@ -84,7 +86,16 @@ struct missionreport: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
-                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                        Menu {
+                            PhotosPicker(selection: $selectedItem, matching: .images) {
+                                Label("ライブラリから選ぶ", systemImage: "photo.on.rectangle")
+                            }
+                            Button {
+                                isShowingCamera = true
+                            } label: {
+                                Label("カメラで撮影", systemImage: "camera.fill")
+                            }
+                        } label: {
                             ZStack{
                                 Rectangle()
                                     .fill(Color.white.opacity(0.12))
@@ -147,8 +158,8 @@ struct missionreport: View {
                                         .padding(.bottom, 12)
                                 }
                             }
+                            .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
                         Button{
                             saveReport()
                             Haptics.notify(.success)
@@ -171,12 +182,13 @@ struct missionreport: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
-                Spacer()
             }
-            .padding(.top, 20)
+            .overlay(alignment: .top) {
+                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps,)
+            }
         }
-        .overlay {
-            ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
+        .sheet(isPresented: $isShowingCamera) {
+            CameraCapture(imageData: $selectedImageData)
         }
         .onChange(of: selectedItem) { _, newItem in
             Task {
@@ -197,6 +209,48 @@ struct missionreport: View {
         missionToUpdate.reportImageData = imageData
         missionToUpdate.reportCreatedAt = Date()
         try? modelcontext.save()
+    }
+}
+
+struct CameraCapture: UIViewControllerRepresentable {
+    @Binding var imageData: Data?
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        picker.modalPresentationStyle = .fullScreen
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: CameraCapture
+
+        init(parent: CameraCapture) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            defer {
+                parent.dismiss()
+            }
+            guard let image = info[.originalImage] as? UIImage else {
+                return
+            }
+            parent.imageData = image.jpegData(compressionQuality: 0.8)
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
     }
 }
 

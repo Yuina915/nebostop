@@ -42,7 +42,7 @@ struct start: View {
                         }
                         .padding(.vertical, 40)
                         .padding(.horizontal, 32)
-                        .frame(maxWidth: geometry.size.width * 0.8)
+                        .frame(maxWidth: geometry.size.width * 0.8,maxHeight: geometry.size.height * 0.4)
                         .background(
                             RoundedRectangle(cornerRadius: 30)
                                 .fill(Color.white)
