@@ -21,18 +21,20 @@ struct ProgressBarOverlay: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            HStack(spacing: 10) {
-                ForEach(0..<totalSteps, id: \.self) { index in
-                    Rectangle()
-                        .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
-                        .frame(height: 6)
-                        .cornerRadius(3)
-                }
+        let barWidth = UIScreen.main.bounds.width * widthRatio
+        let topOffset = UIScreen.main.bounds.height * yRatio
+
+        HStack(spacing: 10) {
+            ForEach(0..<totalSteps, id: \.self) { index in
+                Rectangle()
+                    .fill(index == currentStep ? Color.orange : Color.gray.opacity(0.3))
+                    .frame(height: 6)
+                    .cornerRadius(3)
             }
-            .frame(width: geo.size.width * widthRatio)
-            .position(x: geo.size.width / 2, y: geo.size.height * yRatio)
         }
+        .frame(width: barWidth)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, topOffset)
         .allowsHitTesting(false)
     }
 }

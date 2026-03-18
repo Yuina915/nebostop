@@ -15,39 +15,41 @@ struct missionconfirm: View {
     let totalSteps = 3
     
     var body: some View {
-        GeometryReader { geo in
-            ZStack{
-                Image("missionconfirm")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                VStack{
-                    Spacer()
+        ZStack{
+            Image("missionconfirm")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+            VStack{
+                Spacer()
+                Spacer()
+                Spacer()
+                
+                VStack(spacing:30){
+                    Text(inputmission)
+                        .font(.largeTitle)
+                        .multilineTextAlignment(.center)
                     
-                    VStack(spacing:30){
-                        Text(inputmission)
-                            .font(.largeTitle)
-                            .multilineTextAlignment(.center)
-                        
-                        Button{
-                            Haptics.impact(.medium)
-                            onConfirm()
-                        } label: {
-                            Label("ミッションを確定", systemImage: "flag.pattern.checkered")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .padding(.vertical, 15)
-                                .padding(.horizontal, 30)
-                                .background(Color(red: 253/255, green: 149/255, blue: 96/255))
-                                .cornerRadius(30)
-                        }
-                        .padding(.bottom, geo.size.height * 0.25)
+                    Button{
+                        Haptics.impact(.medium)
+                        onConfirm()
+                    } label: {
+                        Label("ミッションを確定", systemImage: "flag.pattern.checkered")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 15)
+                            .padding(.horizontal, 30)
+                            .background(Color(red: 253/255, green: 149/255, blue: 96/255))
+                            .cornerRadius(30)
                     }
+                    .padding(.bottom, 24)
                 }
+                .padding(.horizontal, 24)
+                Spacer()
             }
-            .overlay {
-                ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
-            }
+        }
+        .overlay {
+            ProgressBarOverlay(currentStep: currentStep, totalSteps: totalSteps)
         }
     }
 }
